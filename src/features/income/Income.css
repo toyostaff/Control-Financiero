@@ -1,0 +1,153 @@
+
+.income-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.income-heading h2 {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+.income-heading p {
+  color: #64748b;
+  margin: 0;
+}
+
+.income-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.income-summary-card,
+.income-card {
+  background: white;
+  border: 1px solid #e5e9e7;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 2px 10px #00000008;
+}
+
+.income-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 4px solid #16803c;
+}
+
+.income-summary-card span {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.income-summary-card strong {
+  color: #16803c;
+  font-size: 28px;
+}
+
+.income-card h3 {
+  margin-bottom: 22px;
+}
+
+.income-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.income-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.income-form input,
+.income-form select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d5ded9;
+  border-radius: 8px;
+  background: white;
+  color: #142d27;
+}
+
+.income-form input:focus,
+.income-form select:focus {
+  outline: 2px solid #32795c;
+  outline-offset: 1px;
+}
+
+.income-submit {
+  align-self: end;
+  padding: 13px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #16803c;
+  color: white;
+  font-weight: 600;
+}
+
+.income-submit:hover {
+  background: #116832;
+}
+
+.income-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.income-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.income-table th,
+.income-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #e5e9e7;
+}
+
+.income-table th {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.income-table td {
+  font-size: 14px;
+}
+
+.income-amount {
+  color: #16803c;
+  font-weight: 600;
+}
+
+.income-delete {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.income-empty {
+  text-align: center;
+  color: #64748b;
+}
+
+@media (max-width: 650px) {
+  .income-summary,
+  .income-form {
+    grid-template-columns: 1fr;
+  }
+
+  .income-summary-card,
+  .income-card {
+    padding: 18px;
+  }
+}

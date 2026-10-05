@@ -5,12 +5,14 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
 import './styles/variables.css'
-
+import { FinanceProvider } from './context/FinanceContext'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <FinanceProvider>
+        <App />
+      </FinanceProvider>
     </BrowserRouter>
   </React.StrictMode>,
 )

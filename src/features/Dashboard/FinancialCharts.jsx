@@ -1,4 +1,3 @@
-
 import {
   BarChart,
   Bar,
@@ -13,13 +12,23 @@ import {
   Cell,
 } from 'recharts'
 
-import { monthlyData, categoryData } from './dashboardData'
+const COLORS = [
+  '#32795c',
+  '#60a5fa',
+  '#f59e0b',
+  '#a78bfa',
+  '#f87171',
+  '#14b8a6',
+  '#f97316',
+]
 
-const COLORS = ['#32795c', '#60a5fa', '#f59e0b', '#a78bfa', '#f87171']
+const formatMoney = (value) =>
+  `S/ ${Number(value).toLocaleString('es-PE')}`
 
-const formatMoney = (value) => `S/ ${Number(value).toLocaleString('es-PE')}`
-
-export default function FinancialCharts() {
+export default function FinancialCharts({
+  monthlyData,
+  categoryData,
+}) {
   return (
     <div className="dashboard-panels">
       <article className="dashboard-panel">
@@ -33,12 +42,14 @@ export default function FinancialCharts() {
               <YAxis tickFormatter={formatMoney} width={85} />
               <Tooltip formatter={formatMoney} />
               <Legend />
+
               <Bar
                 dataKey="ingresos"
                 name="Ingresos"
                 fill="#32795c"
                 radius={[5, 5, 0, 0]}
               />
+
               <Bar
                 dataKey="gastos"
                 name="Gastos"
@@ -53,31 +64,37 @@ export default function FinancialCharts() {
       <article className="dashboard-panel">
         <h3>Gastos por categoría</h3>
 
-        <div style={{ width: '100%', height: 300 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={categoryData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="45%"
-                outerRadius={90}
-              >
-                {categoryData.map((item, index) => (
-                  <Cell
-                    key={item.name}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip formatter={formatMoney} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        {categoryData.length === 0 ? (
+          <div className="dashboard-placeholder">
+            Registra gastos para visualizar este gráfico.
+          </div>
+        ) : (
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={categoryData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="45%"
+                  outerRadius={90}
+                >
+                  {categoryData.map((item, index) => (
+                    <Cell
+                      key={item.name}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+
+                <Tooltip formatter={formatMoney} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </article>
     </div>
   )
 }
-

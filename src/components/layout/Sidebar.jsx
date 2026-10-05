@@ -1,16 +1,19 @@
-
-import { NavLink } from 'react-router-dom'
-import './Sidebar.css'
+import { NavLink } from "react-router-dom";
+import "./Sidebar.css";
 
 const menuItems = [
-  { path: '/dashboard', label: 'Dashboard' },
-  { path: '/gastos', label: 'Gastos' },
-  { path: '/ingresos', label: 'Ingresos' },
-  { path: '/cuentas', label: 'Cuentas' },
-  { path: '/categorias', label: 'Categorías' },
-  { path: '/presupuestos', label: 'Presupuestos' },
-  { path: '/metas', label: 'Metas de ahorro' },
-]
+  { path: "/dashboard", label: "Dashboard" },
+  { path: "/gastos", label: "Gastos" },
+  { path: "/ingresos", label: "Ingresos" },
+  { path: "/cuentas", label: "Cuentas" },
+  { path: "/categorias", label: "Categorías" },
+  { path: "/presupuestos", label: "Presupuestos" },
+  { path: "/metas", label: "Metas de ahorro" },
+  {
+    path: "/historial",
+    label: "Historial",
+  },
+];
 
 export default function Sidebar({ isOpen, onClose }) {
   return (
@@ -23,7 +26,7 @@ export default function Sidebar({ isOpen, onClose }) {
         />
       )}
 
-      <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
+      <aside className={`sidebar ${isOpen ? "sidebar-open" : ""}`}>
         <div className="sidebar-brand">
           <h2>Control Financiero</h2>
           <p>Mis finanzas</p>
@@ -36,7 +39,7 @@ export default function Sidebar({ isOpen, onClose }) {
               to={item.path}
               onClick={onClose}
               className={({ isActive }) =>
-                `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
+                `sidebar-link ${isActive ? "sidebar-link-active" : ""}`
               }
             >
               {item.label}
@@ -45,5 +48,5 @@ export default function Sidebar({ isOpen, onClose }) {
         </nav>
       </aside>
     </>
-  )
+  );
 }

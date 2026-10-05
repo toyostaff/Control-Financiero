@@ -1,0 +1,154 @@
+
+
+.expenses-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.expenses-heading h2 {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+.expenses-heading p {
+  color: #64748b;
+  margin: 0;
+}
+
+.expenses-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.expenses-summary-card,
+.expenses-card {
+  background: white;
+  border: 1px solid #e5e9e7;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 2px 10px #00000008;
+}
+
+.expenses-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 4px solid #dc3545;
+}
+
+.expenses-summary-card span {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.expenses-summary-card strong {
+  font-size: 28px;
+  color: #142d27;
+}
+
+.expenses-card h3 {
+  margin-bottom: 22px;
+}
+
+.expenses-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.expenses-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.expenses-form input,
+.expenses-form select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d5ded9;
+  border-radius: 8px;
+  background: white;
+  color: #142d27;
+}
+
+.expenses-form input:focus,
+.expenses-form select:focus {
+  outline: 2px solid #32795c;
+  outline-offset: 1px;
+}
+
+.expenses-submit {
+  align-self: end;
+  padding: 13px 20px;
+  background: #32795c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.expenses-submit:hover {
+  background: #276349;
+}
+
+.expenses-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.expenses-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.expenses-table th,
+.expenses-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #e5e9e7;
+}
+
+.expenses-table th {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.expenses-table td {
+  font-size: 14px;
+}
+
+.expenses-amount {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.expenses-delete {
+  border: none;
+  background: #fee2e2;
+  color: #b91c1c;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.expenses-empty {
+  text-align: center;
+  color: #64748b;
+}
+
+@media (max-width: 650px) {
+  .expenses-summary,
+  .expenses-form {
+    grid-template-columns: 1fr;
+  }
+
+  .expenses-summary-card,
+  .expenses-card {
+    padding: 18px;
+  }
+}
