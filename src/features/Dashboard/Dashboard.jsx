@@ -1,5 +1,6 @@
 
 import './Dashboard.css'
+import FinancialCharts from './FinancialCharts'
 
 const indicators = [
   {
@@ -62,12 +63,9 @@ export default function Dashboard() {
           </div>
         </article>
 
-        <article className="dashboard-panel">
-          <h3>Gastos por categoría</h3>
-          <div className="dashboard-placeholder">
-            Próximamente: distribución de gastos
-          </div>
-        </article>
+       <FinancialCharts />
+
+       
       </div>
 
       <article className="dashboard-panel">
