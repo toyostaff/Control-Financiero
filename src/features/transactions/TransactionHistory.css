@@ -136,3 +136,16 @@
     padding: 18px;
   }
 }
+
+
+
+.history-type.debt_payment {
+  background-color: #e8edff;
+  color: #3448a5;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-weight: 600;
+}
+
+
+

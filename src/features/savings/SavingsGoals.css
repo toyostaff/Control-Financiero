@@ -206,3 +206,30 @@
     padding: 18px;
   }
 }
+
+.goal-finance-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 10px;
+}
+.goal-finance-form h4 {
+  margin: 0;
+}
+.goal-finance-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.goal-finance-form input,
+.goal-finance-form select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 8px;
+  background: var(--color-surface, white);
+  color: var(--color-text, #222);
+}

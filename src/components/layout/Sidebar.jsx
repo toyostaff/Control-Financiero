@@ -1,3 +1,4 @@
+
 import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
 
@@ -9,10 +10,8 @@ const menuItems = [
   { path: "/categorias", label: "Categorías" },
   { path: "/presupuestos", label: "Presupuestos" },
   { path: "/metas", label: "Metas de ahorro" },
-  {
-    path: "/historial",
-    label: "Historial",
-  },
+  { path: "/deudas", label: "Deudas y préstamos" },
+  { path: "/historial", label: "Historial" },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -20,26 +19,34 @@ export default function Sidebar({ isOpen, onClose }) {
     <>
       {isOpen && (
         <button
+          type="button"
           className="sidebar-overlay"
           onClick={onClose}
           aria-label="Cerrar menú"
         />
       )}
 
-      <aside className={`sidebar ${isOpen ? "sidebar-open" : ""}`}>
+      <aside
+        className={`sidebar ${isOpen ? "sidebar-open" : ""}`}
+      >
         <div className="sidebar-brand">
           <h2>Control Financiero</h2>
           <p>Mis finanzas</p>
         </div>
 
-        <nav className="sidebar-nav" aria-label="Menú principal">
+        <nav
+          className="sidebar-nav"
+          aria-label="Menú principal"
+        >
           {menuItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               onClick={onClose}
               className={({ isActive }) =>
-                `sidebar-link ${isActive ? "sidebar-link-active" : ""}`
+                `sidebar-link ${
+                  isActive ? "sidebar-link-active" : ""
+                }`
               }
             >
               {item.label}

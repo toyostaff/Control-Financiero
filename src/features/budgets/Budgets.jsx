@@ -1,81 +1,157 @@
-import { useState } from "react";
-import useFinance from "../../hooks/useFinance";
+
+import { useEffect, useState } from "react";
+import { getFinancialData } from "../../services/financeDataService";
+import {
+  getBudgets,
+  createBudget,
+  removeBudget,
+} from "../../services/budgetsService";
 import "./Budgets.css";
 
-
-
 const formatMoney = (amount) =>
-  new Intl.NumberFormat('es-PE', {
-    style: 'currency',
-    currency: 'PEN',
-  }).format(amount)
+  new Intl.NumberFormat("es-PE", {
+    style: "currency",
+    currency: "PEN",
+  }).format(Number(amount) || 0);
+
+const isCurrentMonth = (date) => {
+  if (typeof date !== "string") return false;
+
+  const now = new Date();
+  const [year, month] = date.split("-").map(Number);
+
+  return (
+    year === now.getFullYear() &&
+    month === now.getMonth() + 1
+  );
+};
 
 export default function Budgets() {
-  const {
-    budgets,
-    categories,
-    transactions,
-    addBudget,
-    deleteBudget,
-  } = useFinance()
+  const [budgets, setBudgets] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [savingsMovements, setSavingsMovements] = useState([]);
+
+  const [form, setForm] = useState({
+    category: "",
+    limit: "",
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadData() {
+      try {
+        const [financialData, budgetData] = await Promise.all([
+          getFinancialData(),
+          getBudgets(),
+        ]);
+
+        if (!active) return;
+
+        setCategories(financialData.categories || []);
+        setTransactions(financialData.transactions || []);
+        setSavingsMovements(financialData.savingsMovements || []);
+        setBudgets(budgetData);
+      } catch (err) {
+        if (active) {
+          setError(
+            err.message || "No se pudieron cargar los presupuestos."
+          );
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    loadData();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const expenseCategories = categories.filter(
     (category) =>
-      category.type === 'expense' && category.active
-  )
+      category.type === "expense" && category.active
+  );
 
-  const [form, setForm] = useState({
-    category: '',
-    limit: '',
-  })
+  const currentExpenses = [
+    ...transactions.filter(
+      (transaction) =>
+        transaction.type === "expense" &&
+        isCurrentMonth(transaction.date)
+    ),
+    ...savingsMovements.filter(
+      (movement) =>
+        movement.type === "saving_spend" &&
+        isCurrentMonth(movement.date)
+    ),
+  ];
 
   const budgetsWithSpent = budgets.map((budget) => {
-    const spent = transactions
+    const spent = currentExpenses
       .filter(
-        (transaction) =>
-          transaction.type === 'expense' &&
-          transaction.category === budget.category
+        (movement) =>
+          movement.category === budget.category
       )
       .reduce(
-        (sum, transaction) => sum + transaction.amount,
+        (sum, movement) =>
+          sum + Number(movement.amount || 0),
         0
-      )
+      );
 
     return {
       ...budget,
       spent,
-    }
-  })
+    };
+  });
 
   const totalBudget = budgetsWithSpent.reduce(
-    (sum, budget) => sum + budget.limit,
+    (sum, budget) => sum + Number(budget.limit || 0),
     0
-  )
+  );
 
   const totalSpent = budgetsWithSpent.reduce(
     (sum, budget) => sum + budget.spent,
     0
-  )
+  );
 
-  const totalAvailable = totalBudget - totalSpent
+  const totalAvailable = totalBudget - totalSpent;
 
   function handleChange(event) {
-    const { name, value } = event.target
+    const { name, value } = event.target;
 
     setForm((previous) => ({
       ...previous,
       [name]: value,
-    }))
+    }));
   }
 
-  function handleSubmit(event) {
-    event.preventDefault()
+  async function handleSubmit(event) {
+    event.preventDefault();
 
-    const limit = Number(form.limit)
+    if (saving || deletingId !== null) return;
 
-    if (!form.category || !Number.isFinite(limit) || limit <= 0) {
-      alert('Completa los datos del presupuesto correctamente.')
-      return
+    setError("");
+    setMessage("");
+
+    const limit = Number(form.limit);
+
+    if (
+      !form.category ||
+      form.limit === "" ||
+      !Number.isFinite(limit) ||
+      limit <= 0
+    ) {
+      setError("Completa los datos del presupuesto correctamente.");
+      return;
     }
 
     if (
@@ -83,24 +159,65 @@ export default function Budgets() {
         (budget) => budget.category === form.category
       )
     ) {
-      alert('Ya existe un presupuesto para esta categoría.')
-      return
+      setError("Ya existe un presupuesto para esta categoría.");
+      return;
     }
 
-    addBudget({
-      category: form.category,
-      limit,
-    })
+    setSaving(true);
 
-    setForm({
-      category: '',
-      limit: '',
-    })
+    try {
+      await createBudget({
+        category: form.category,
+        limit,
+      });
+
+      const updatedBudgets = await getBudgets();
+
+      setBudgets(updatedBudgets);
+      setForm({
+        category: "",
+        limit: "",
+      });
+
+      setMessage("Presupuesto creado correctamente.");
+    } catch (err) {
+      setError(err.message || "No se pudo crear el presupuesto.");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function handleDelete(id) {
-    if (!window.confirm('¿Deseas eliminar este presupuesto?')) return
-    deleteBudget(id)
+  async function handleDelete(id) {
+    if (saving || deletingId !== null) return;
+
+    if (!window.confirm("¿Deseas eliminar este presupuesto?")) {
+      return;
+    }
+
+    setError("");
+    setMessage("");
+    setDeletingId(id);
+
+    try {
+      await removeBudget(id);
+
+      const updatedBudgets = await getBudgets();
+      setBudgets(updatedBudgets);
+
+      setMessage("Presupuesto eliminado correctamente.");
+    } catch (err) {
+      setError(err.message || "No se pudo eliminar el presupuesto.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  if (loading) {
+    return (
+      <section className="budgets-page">
+        <p>Cargando presupuestos desde Supabase...</p>
+      </section>
+    );
   }
 
   return (
@@ -115,6 +232,18 @@ export default function Budgets() {
 
         <span className="budgets-period">Este mes</span>
       </header>
+
+      {error && (
+        <p role="alert" style={{ color: "#b91c1c" }}>
+          {error}
+        </p>
+      )}
+
+      {message && (
+        <p role="status" style={{ color: "#15803d" }}>
+          {message}
+        </p>
+      )}
 
       <div className="budgets-summary">
         <article className="budgets-summary-card">
@@ -143,6 +272,7 @@ export default function Budgets() {
               name="category"
               value={form.category}
               onChange={handleChange}
+              disabled={saving || deletingId !== null}
               required
             >
               <option value="">Seleccionar categoría</option>
@@ -165,12 +295,17 @@ export default function Budgets() {
               value={form.limit}
               onChange={handleChange}
               placeholder="0.00"
+              disabled={saving || deletingId !== null}
               required
             />
           </label>
 
-          <button className="budgets-submit" type="submit">
-            Crear presupuesto
+          <button
+            className="budgets-submit"
+            type="submit"
+            disabled={saving || deletingId !== null}
+          >
+            {saving ? "Guardando..." : "Crear presupuesto"}
           </button>
         </form>
       </article>
@@ -182,18 +317,22 @@ export default function Budgets() {
         </div>
 
         <div className="budgets-list">
+          {budgetsWithSpent.length === 0 && (
+            <p>Aún no tienes presupuestos registrados.</p>
+          )}
+
           {budgetsWithSpent.map((budget) => {
             const percentage =
               budget.limit > 0
                 ? (budget.spent / budget.limit) * 100
-                : 0
+                : 0;
 
-            const remaining = budget.limit - budget.spent
+            const remaining = budget.limit - budget.spent;
 
-            let status = 'normal'
+            let status = "normal";
 
-            if (percentage >= 100) status = 'danger'
-            else if (percentage >= 80) status = 'warning'
+            if (percentage >= 100) status = "danger";
+            else if (percentage >= 80) status = "warning";
 
             return (
               <article className="budget-item" key={budget.id}>
@@ -201,7 +340,7 @@ export default function Budgets() {
                   <div>
                     <h4>{budget.category}</h4>
                     <p>
-                      {formatMoney(budget.spent)} de{' '}
+                      {formatMoney(budget.spent)} de{" "}
                       {formatMoney(budget.limit)}
                     </p>
                   </div>
@@ -215,7 +354,10 @@ export default function Budgets() {
                   <div
                     className={`budget-progress-bar ${status}`}
                     style={{
-                      width: `${Math.min(percentage, 100)}%`,
+                      width: `${Math.max(
+                        0,
+                        Math.min(percentage, 100)
+                      )}%`,
                     }}
                   />
                 </div>
@@ -232,15 +374,18 @@ export default function Budgets() {
                   <button
                     type="button"
                     onClick={() => handleDelete(budget.id)}
+                    disabled={saving || deletingId !== null}
                   >
-                    Eliminar
+                    {deletingId === budget.id
+                      ? "Eliminando..."
+                      : "Eliminar"}
                   </button>
                 </div>
               </article>
-            )
+            );
           })}
         </div>
       </article>
     </section>
-  )
+  );
 }
