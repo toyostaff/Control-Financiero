@@ -7,6 +7,7 @@ const menuItems = [
   { path: "/gastos", label: "Gastos" },
   { path: "/ingresos", label: "Ingresos" },
   { path: "/cuentas", label: "Cuentas" },
+  { path: "/transferencias", label: "Transferencias" },
   { path: "/categorias", label: "Categorías" },
   { path: "/presupuestos", label: "Presupuestos" },
   { path: "/metas", label: "Metas de ahorro" },

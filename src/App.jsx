@@ -19,6 +19,7 @@ import Budgets from "./features/budgets/Budgets";
 import SavingsGoals from "./features/savings/SavingsGoals";
 import TransactionHistory from "./features/transactions/TransactionHistory";
 import Debts from "./features/debts/Debts";
+import Transfers from "./features/transfers/Transfers";
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -344,6 +345,11 @@ export default function App() {
           <Route
             path="/deudas"
             element={<Debts />}
+          />
+
+          <Route
+            path="/transferencias"
+            element={<Transfers />}
           />
         </Route>
       </Route>
