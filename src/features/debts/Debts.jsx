@@ -20,6 +20,7 @@ import {
   getDebtPayments,
   createDebt,
   registerDebtPayment,
+  completeDebtEarly,
   registerTestDebtPayment,
   reverseDebtPayment,
   deleteDebtSafely,
@@ -176,7 +177,11 @@ export default function Debts() {
   }
 
   const activeAccounts = debtAccounts.filter((account) => account.active);
-  const totalDebt = debts.reduce((sum, debt) => sum + Number(debt.balance), 0);
+  const totalDebt = debts.reduce(
+    (sum, debt) =>
+      sum + (debt.closedAt ? 0 : Number(debt.balance)),
+    0
+  );
   const totalPaid = debtPayments.reduce(
     (sum, payment) => sum + Number(payment.amount),
     0,
@@ -184,7 +189,7 @@ export default function Debts() {
   const monthlyTotal = debts.reduce(
     (sum, debt) =>
       sum +
-      (Number(debt.balance) > 0
+      (!debt.closedAt && Number(debt.balance) > 0
         ? Math.min(Number(debt.monthlyPayment), Number(debt.balance))
         : 0),
     0,
@@ -247,7 +252,42 @@ const paymentPoints = payments.reduce(
   []
 );
 
-return [initialPoint, ...paymentPoints];
+const closureEvents = shown
+  .filter((debt) => debt.closedAt)
+  .map((debt) => ({
+    date: debt.closedAt,
+    amount: Number(debt.forgivenAmount || 0),
+  }));
+
+const events = [
+  ...payments.map((payment) => ({
+    date: `${payment.date}T00:00:00`,
+    amount: Number(payment.principal ?? payment.amount),
+    label: payment.date,
+    type: "payment",
+  })),
+  ...closureEvents.map((event) => ({
+    ...event,
+    label: "Cierre anticipado",
+    type: "closure",
+  })),
+].sort((a, b) => a.date.localeCompare(b.date));
+
+let remaining = initial;
+
+const points = events.map((event, index) => {
+  remaining = Math.max(0, remaining - event.amount);
+
+  return {
+    label:
+      event.type === "closure"
+        ? `Cierre #${index + 1}`
+        : `${event.label} #${index + 1}`,
+    balance: Number(remaining.toFixed(2)),
+  };
+});
+
+return [initialPoint, ...points];
 
   }, 
   
@@ -267,7 +307,7 @@ return [initialPoint, ...paymentPoints];
   const distributionData = useMemo(() => {
     const amounts = new Map();
     debts.forEach((debt) => {
-      if (Number(debt.balance) <= 0) return;
+      if (debt.closedAt || Number(debt.balance) <= 0) return;
       const type = debtTypes[debt.type] || "Otra deuda";
       amounts.set(type, (amounts.get(type) || 0) + Number(debt.balance));
     });
@@ -312,6 +352,36 @@ return [initialPoint, ...paymentPoints];
     await runAction(
       () => reverseDebtPayment(payment.id, debtMode),
       "Pago revertido y saldos restaurados.",
+    );
+  }
+
+  async function closeDebtEarly(debt) {
+    if (operationLock.current || busy || debt.closedAt) return;
+
+    const paid = Number(debt.initialAmount) - Number(debt.balance);
+    const progress = (paid / Number(debt.initialAmount)) * 100;
+
+    if (
+      !Number.isFinite(progress) ||
+      progress < 90 ||
+      Number(debt.balance) <= 0
+    ) {
+      setMessage("La deuda debe tener al menos el 90% amortizado.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Marcar «${debt.name}» como completada?\n\n` +
+      `Importe amortizado: ${formatMoney(paid)}\n` +
+      `Importe condonado: ${formatMoney(debt.balance)}\n\n` +
+      "Esta acción cerrará la deuda sin registrar otro pago."
+    );
+
+    if (!confirmed) return;
+
+    await runAction(
+      () => completeDebtEarly(debt.id),
+      "Deuda marcada como completada correctamente."
     );
   }
 
@@ -525,7 +595,7 @@ return [initialPoint, ...paymentPoints];
               >
                 <option value="">Seleccionar deuda</option>
                 {debts
-                  .filter((debt) => debt.balance > 0)
+                  .filter((debt) => !debt.closedAt && debt.balance > 0)
                   .map((debt) => (
                     <option key={debt.id} value={debt.id}>
                       {debt.name} — {formatMoney(debt.balance)}
@@ -605,13 +675,19 @@ return [initialPoint, ...paymentPoints];
                 <span>{debtTypes[debt.type] || "Otra deuda"}</span>
               </div>
               <span
-                className={`debt-status ${debt.balance <= 0 ? "paid" : ""}`}
+                className={`debt-status ${debt.balance <= 0 || debt.closedAt ? "paid" : ""}`}
               >
-                {debt.balance <= 0 ? "Pagada" : "Pendiente"}
+                {debt.closedAt
+                  ? "Completada anticipadamente"
+                  : debt.balance <= 0
+                    ? "Pagada"
+                    : "Pendiente"}
               </span>
               <div className="debt-amount">
                 <span>Saldo pendiente</span>
-                <strong>{formatMoney(debt.balance)}</strong>
+                <strong>
+                  {formatMoney(debt.closedAt ? 0 : debt.balance)}
+                </strong>
               </div>
               <div className="debt-progress">
                 <div style={{ width: `${progress}%` }} />
@@ -625,7 +701,24 @@ return [initialPoint, ...paymentPoints];
                 </span>
                 <span>Vence el día {debt.dueDay}</span>
               </div>
+              {debt.closedAt && (
+                <p>
+                  Descuento por cierre: {formatMoney(debt.forgivenAmount)}
+                </p>
+              )}
               <div className="debt-actions">
+                {!debt.closedAt &&
+                  debt.balance > 0 &&
+                  debt.initialAmount > 0 &&
+                  debt.balance <= debt.initialAmount * 0.10 && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => closeDebtEarly(debt)}
+                    >
+                      Marcar como completada
+                    </button>
+                  )}
                 <button
                   type="button"
                   onClick={() => setSelectedDebtId(debt.id)}

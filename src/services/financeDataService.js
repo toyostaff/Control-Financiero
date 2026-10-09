@@ -46,6 +46,8 @@ const mapDebt = (item) => ({
   dueDay: item.due_day,
   singlePayment: item.single_payment,
   mode: item.mode,
+  closedAt: item.closed_at,
+  forgivenAmount: toNumber(item.forgiven_amount),
   createdAt: item.created_at,
 });
 

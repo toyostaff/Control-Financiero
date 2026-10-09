@@ -44,6 +44,8 @@ function mapDebt(debt) {
     dueDay: Number(debt.due_day),
     singlePayment: debt.single_payment,
     mode: debt.mode,
+    closedAt: debt.closed_at,
+    forgivenAmount: Number(debt.forgiven_amount || 0),
     createdAt: debt.created_at,
   };
 }
@@ -314,4 +316,24 @@ export async function resetDebtTestEnvironment() {
   if (error) throw new Error(error.message);
 
   return data;
+}
+export async function completeDebtEarly(debtId) {
+  await getCurrentUser();
+
+  if (!debtId) {
+    throw new Error("Selecciona una deuda válida.");
+  }
+
+  const { error } = await supabase.rpc(
+    "complete_debt_early",
+    {
+      p_debt_id: debtId,
+    }
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return true;
 }
